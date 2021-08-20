@@ -1,10 +1,13 @@
 #[macro_use]
 extern crate rocket;
+#[macro_use]
+extern crate diesel;
 extern crate structopt;
 
 pub use structopt::StructOpt;
 mod models;
 mod repo;
+mod schema;
 mod utils;
 
 #[derive(Debug, StructOpt)]
