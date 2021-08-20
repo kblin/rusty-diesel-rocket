@@ -3,7 +3,9 @@ extern crate rocket;
 extern crate structopt;
 
 pub use structopt::StructOpt;
+mod models;
 mod repo;
+mod utils;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "mibig-api", about = "Manage the MIBiG database")]
@@ -38,7 +40,6 @@ fn rocket() -> rocket::Rocket<rocket::Build> {
 #[rocket::main]
 async fn main() {
     let args = Opts::from_args();
-    println!("{:?}", args);
 
     match args.cmd {
         Subcommand::Serve(_) => {
