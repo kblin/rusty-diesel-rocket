@@ -4,25 +4,25 @@ use super::super::utils;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Entry {
-    changelog: Vec<ChangeLog>,
-    cluster: Cluster,
+    pub changelog: Vec<ChangeLog>,
+    pub cluster: Cluster,
     #[serde(skip_serializing_if = "Option::is_none")]
-    comments: Option<String>,
+    pub comments: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Cluster {
-    biosyn_class: Vec<BiosyntheticClass>,
-    loci: Loci,
-    mibig_accession: String,
-    minimal: bool,
+    pub biosyn_class: Vec<BiosyntheticClass>,
+    pub loci: Loci,
+    pub mibig_accession: String,
+    pub minimal: bool,
     #[serde(with = "utils::num_as_string")]
-    ncbi_tax_id: u64,
-    organism_name: String,
-    publications: Vec<Publication>,
+    pub ncbi_tax_id: i64,
+    pub organism_name: String,
+    pub publications: Vec<Publication>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 pub enum BiosyntheticClass {
     Alkaloid,
     NRP,
