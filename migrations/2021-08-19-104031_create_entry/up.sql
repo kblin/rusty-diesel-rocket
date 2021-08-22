@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS entries (
-    entry_id text PRIMARY KEY,
+    id text PRIMARY KEY,
     minimal bool NOT NULL,
     tax_id bigint NOT NULL REFERENCES taxa ON DELETE CASCADE,
     organism_name text NOT NULL,

@@ -10,8 +10,8 @@ table! {
 }
 
 table! {
-    entries (entry_id) {
-        entry_id -> Text,
+    entries (id) {
+        id -> Text,
         minimal -> Bool,
         tax_id -> Int8,
         organism_name -> Text,
