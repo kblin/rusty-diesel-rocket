@@ -29,7 +29,7 @@ table! {
 
 table! {
     taxa (tax_id) {
-        tax_id -> Int4,
+        tax_id -> Int8,
         ncbi_taxid -> Int8,
         superkingdom -> Text,
         kingdom -> Text,
@@ -43,6 +43,7 @@ table! {
     }
 }
 
+joinable!(entries -> taxa (tax_id));
 joinable!(rel_entries_types -> bgc_types (bgc_type_id));
 joinable!(rel_entries_types -> entries (entry_id));
 

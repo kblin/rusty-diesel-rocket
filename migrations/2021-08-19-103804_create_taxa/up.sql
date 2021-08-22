@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS taxa (
-    tax_id	serial PRIMARY KEY,
+    tax_id	bigserial PRIMARY KEY,
     ncbi_taxid	bigint NOT NULL,
     superkingdom	text NOT NULL,
     kingdom	text NOT NULL,
