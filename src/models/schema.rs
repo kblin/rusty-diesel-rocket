@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::super::utils;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct MibigEntry {
+pub struct Entry {
     changelog: Vec<ChangeLog>,
     cluster: Cluster,
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -53,7 +53,8 @@ use super::models::schema;
 
 fn repo_import(infile: std::path::PathBuf) {
     let content = std::fs::read_to_string(&infile).expect("could not read file");
-    let entry: schema::MibigEntry = serde_json::from_str(&content).unwrap();
+    let entry: schema::Entry = serde_json::from_str(&content).unwrap();
+
     //println!("{:?}", entry);
     let return_value = serde_json::to_string_pretty(&entry).expect("failed to serialize");
     println!("{}", return_value)
