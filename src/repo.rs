@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde_json;
 use structopt::clap::arg_enum;
 use structopt::StructOpt;
@@ -39,8 +41,8 @@ structopt::clap::arg_enum! {
 
 #[derive(Debug, StructOpt)]
 pub struct RepoImportOpts {
-    #[structopt(parse(from_os_str))]
-    infile: std::path::PathBuf,
+    #[structopt(parse(from_os_str), help = "File or directory containing MIBiG JSON data")]
+    input: std::path::PathBuf,
 }
 
 pub fn repo(cfg: RepoOpts) {
@@ -49,7 +51,7 @@ pub fn repo(cfg: RepoOpts) {
     match cfg.cmd {
         Some(cmd) => match cmd {
             RepoSubcommand::List(opts) => repo_list(opts.status),
-            RepoSubcommand::Import(opts) => repo_import(opts.infile, conn),
+            RepoSubcommand::Import(opts) => repo_import(opts.input, conn),
         },
         None => repo_list(RepoListEntryStatus::Published),
     }
@@ -57,14 +59,35 @@ pub fn repo(cfg: RepoOpts) {
 
 use crate::models;
 
-fn repo_import(infile: std::path::PathBuf, _conn: PgConnection) {
+fn repo_import(input: std::path::PathBuf, conn: PgConnection) {
+
+    if input.is_file() {
+        import_file(input, None, &conn);
+        return
+    }
+
+    let mut taxon_cache: HashMap<i64, utils::taxa::NcbiTaxEntry> = HashMap::new();
+
+    for entry_option in std::fs::read_dir(input).expect("failed to read input") {
+        let entry = entry_option.unwrap();
+        let path = entry.path();
+        if "json" != path.extension().unwrap() {
+            continue
+        }
+        eprintln!("Loading {:?}", path);
+        import_file(path, Some(&mut taxon_cache), &conn);
+    }
+}
+
+fn import_file(infile: std::path::PathBuf, cache: Option<&mut HashMap<i64, utils::taxa::NcbiTaxEntry>>, conn: &PgConnection) {
     let content = std::fs::read_to_string(&infile).expect("could not read file");
     let entry: models::schema::Entry = serde_json::from_str(&content).unwrap();
 
     let tax_id = get_or_create_taxid(
         entry.cluster.organism_name.as_str(),
         entry.cluster.ncbi_tax_id,
-        &_conn,
+        cache,
+        conn,
     )
     .expect("Error getting tax_id");
 
@@ -90,7 +113,7 @@ fn repo_import(infile: std::path::PathBuf, _conn: PgConnection) {
 
     let created_entry: models::db::Entry = diesel::insert_into(crate::schema::entries::table)
         .values(&new_entry)
-        .get_result(&_conn)
+        .get_result(conn)
         .expect("Error saving entry");
 
     println!("{:?}", created_entry);
@@ -101,6 +124,7 @@ fn repo_import(infile: std::path::PathBuf, _conn: PgConnection) {
 fn get_or_create_taxid<'a>(
     organism_name: &'a str,
     ncbi_tax_id: i64,
+    cache: Option<&'a mut HashMap<i64, utils::taxa::NcbiTaxEntry>>,
     conn: &'a PgConnection,
 ) -> Result<i64, utils::taxa::NcbiTaxEntryError> {
     use crate::schema::taxa::dsl::*;
@@ -113,7 +137,7 @@ fn get_or_create_taxid<'a>(
     {
         Ok(number) => number,
         Err(_) => {
-            let tax_info = utils::taxa::entry_for_taxid(ncbi_tax_id)?;
+            let tax_info = utils::taxa::entry_for_taxid(ncbi_tax_id, cache)?;
             let new_tax_entry = models::db::NewTaxon {
                 ncbi_taxid: ncbi_tax_id,
                 superkingdom: tax_info.superkingdom,
