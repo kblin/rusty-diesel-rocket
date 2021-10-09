@@ -62,6 +62,11 @@ pub fn entry_for_taxid(
             }
             if let Some(entry) = cache.get(&tax_id) {
                 return Ok(entry.clone());
+            } else {
+                let new_id = detect_merged_id(tax_id)?;
+                if let Some(entry) = cache.get(&new_id) {
+                    return Ok(entry.clone());
+                }
             }
         }
     }
@@ -176,6 +181,51 @@ fn populate_cache(
         }
     };
     Ok(())
+}
+
+fn detect_merged_id(tax_id: i64) -> Result<i64, NcbiTaxEntryError> {
+    dotenv().ok();
+
+    let merged_file_name =
+        env::var("MERGED_DUMP").expect("MERGED_DUMP must point at NCBI taxonomy merged dump file");
+
+    if let Ok(lines) = read_lines(merged_file_name) {
+        for line_option in lines {
+            if let Ok(line) = line_option {
+                let parts: Vec<String> = line
+                    .trim()
+                    .splitn(3, "|")
+                    .map(|part| part.trim().to_string())
+                    .collect();
+
+                let old_id = match parts[0].parse::<i64>() {
+                    Ok(i) => i,
+                    Err(_) => {
+                        return Err(NcbiTaxEntryError {
+                            message: format!("couldn't parse old taxid {}", parts[0]).to_owned(),
+                        })
+                    }
+                };
+
+                if old_id != tax_id {
+                    continue;
+                };
+
+                let new_id = match parts[1].parse::<i64>() {
+                    Ok(i) => i,
+                    Err(_) => {
+                        return Err(NcbiTaxEntryError {
+                            message: format!("couldn't parse new taxid {}", parts[1]).to_owned(),
+                        })
+                    }
+                };
+                return Ok(new_id);
+            }
+        }
+    };
+    Err(NcbiTaxEntryError {
+        message: format!("No entry found for taxid {}", tax_id).to_owned(),
+    })
 }
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
