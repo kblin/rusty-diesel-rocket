@@ -2,8 +2,10 @@ use serde::{Deserialize, Serialize};
 
 use super::super::utils;
 
+pub mod compound;
 pub mod publication;
 
+pub use compound::Compound;
 pub use publication::{Publication, PublicationType};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -17,6 +19,7 @@ pub struct Entry {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Cluster {
     pub biosyn_class: Vec<BiosyntheticClass>,
+    pub compounds: Vec<Compound>,
     pub loci: Loci,
     pub mibig_accession: String,
     pub minimal: bool,
