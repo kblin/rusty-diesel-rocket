@@ -2,11 +2,13 @@ use serde::{Deserialize, Serialize};
 
 use super::super::utils;
 
+pub mod alkaloid;
 pub mod compound;
 pub mod genes;
 pub mod publication;
 pub mod ripp;
 
+pub use alkaloid::Alkaloid;
 pub use compound::Compound;
 pub use genes::Genes;
 pub use publication::{Publication, PublicationType};
@@ -22,6 +24,8 @@ pub struct Entry {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Cluster {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alkaloid: Option<Alkaloid>,
     pub biosyn_class: Vec<BiosyntheticClass>,
     pub compounds: Vec<Compound>,
     #[serde(skip_serializing_if = "Option::is_none")]
