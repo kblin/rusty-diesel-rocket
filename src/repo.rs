@@ -72,9 +72,15 @@ fn repo_import(input: std::path::PathBuf, conn: PgConnection, json_only: bool) {
 
     let mut taxon_cache: HashMap<i64, utils::taxa::NcbiTaxEntry> = HashMap::new();
 
-    for entry_option in std::fs::read_dir(input).expect("failed to read input") {
-        let entry = entry_option.unwrap();
-        let path = entry.path();
+    let mut entries = std::fs::read_dir(input)
+        .expect("failed to read input")
+        .map(|res| res.map(|e| e.path()))
+        .collect::<Result<Vec<_>, std::io::Error>>()
+        .unwrap();
+
+    entries.sort();
+
+    for path in entries {
         if "json" != path.extension().unwrap() {
             continue;
         }
