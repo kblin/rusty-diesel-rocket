@@ -6,6 +6,7 @@ pub mod alkaloid;
 pub mod compound;
 pub mod genes;
 pub mod nrp;
+pub mod other;
 pub mod publication;
 pub mod ripp;
 
@@ -13,6 +14,7 @@ pub use alkaloid::Alkaloid;
 pub use compound::Compound;
 pub use genes::Genes;
 pub use nrp::Nrp;
+pub use other::Other;
 pub use publication::{Publication, PublicationType};
 pub use ripp::RiPP;
 
@@ -40,6 +42,8 @@ pub struct Cluster {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub nrp: Option<Nrp>,
     pub organism_name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub other: Option<Other>,
     pub publications: Vec<Publication>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ripp: Option<RiPP>,
