@@ -5,12 +5,14 @@ use super::super::utils;
 pub mod alkaloid;
 pub mod compound;
 pub mod genes;
+pub mod nrp;
 pub mod publication;
 pub mod ripp;
 
 pub use alkaloid::Alkaloid;
 pub use compound::Compound;
 pub use genes::Genes;
+pub use nrp::Nrp;
 pub use publication::{Publication, PublicationType};
 pub use ripp::RiPP;
 
@@ -35,6 +37,8 @@ pub struct Cluster {
     pub minimal: bool,
     #[serde(with = "utils::num_as_string")]
     pub ncbi_tax_id: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nrp: Option<Nrp>,
     pub organism_name: String,
     pub publications: Vec<Publication>,
     #[serde(skip_serializing_if = "Option::is_none")]
