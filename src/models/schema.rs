@@ -11,6 +11,7 @@ pub mod polyketide;
 pub mod publication;
 pub mod ripp;
 pub mod saccharide;
+pub mod terpene;
 
 pub use alkaloid::Alkaloid;
 pub use compound::Compound;
@@ -21,6 +22,7 @@ pub use polyketide::Polyketide;
 pub use publication::{Publication, PublicationType};
 pub use ripp::RiPP;
 pub use saccharide::Saccharide;
+pub use terpene::Terpene;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Entry {
@@ -55,6 +57,8 @@ pub struct Cluster {
     pub ripp: Option<RiPP>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub saccharide: Option<Saccharide>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub terpene: Option<Terpene>,
 }
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
