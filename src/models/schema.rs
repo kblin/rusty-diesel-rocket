@@ -10,6 +10,7 @@ pub mod other;
 pub mod polyketide;
 pub mod publication;
 pub mod ripp;
+pub mod saccharide;
 
 pub use alkaloid::Alkaloid;
 pub use compound::Compound;
@@ -19,6 +20,7 @@ pub use other::Other;
 pub use polyketide::Polyketide;
 pub use publication::{Publication, PublicationType};
 pub use ripp::RiPP;
+pub use saccharide::Saccharide;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Entry {
@@ -51,6 +53,8 @@ pub struct Cluster {
     pub publications: Vec<Publication>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ripp: Option<RiPP>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub saccharide: Option<Saccharide>,
 }
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
