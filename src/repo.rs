@@ -4,6 +4,7 @@ use serde_json;
 use structopt::clap::arg_enum;
 use structopt::StructOpt;
 
+use crate::errors::MibigError;
 use crate::utils;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -152,7 +153,7 @@ fn get_or_create_taxid<'a>(
     ncbi_tax_id: i64,
     cache: Option<&'a mut HashMap<i64, utils::taxa::NcbiTaxEntry>>,
     conn: &'a PgConnection,
-) -> Result<i64, utils::taxa::NcbiTaxEntryError> {
+) -> Result<i64, MibigError> {
     use crate::schema::taxa::dsl::*;
 
     let loaded_taxid: i64 = match taxa

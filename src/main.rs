@@ -6,6 +6,7 @@ extern crate dotenv;
 extern crate structopt;
 
 pub use structopt::StructOpt;
+mod errors;
 mod models;
 mod repo;
 mod schema;

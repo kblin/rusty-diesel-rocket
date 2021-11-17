@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::env;
-use std::fmt;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
@@ -22,29 +21,12 @@ pub struct NcbiTaxEntry {
     pub superkingdom: String,
 }
 
-#[derive(Debug)]
-pub struct NcbiTaxEntryError {
-    message: String,
-}
-
-impl fmt::Display for NcbiTaxEntryError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl From<std::io::Error> for NcbiTaxEntryError {
-    fn from(item: std::io::Error) -> Self {
-        NcbiTaxEntryError {
-            message: format!("{}", item),
-        }
-    }
-}
+use crate::errors::MibigError;
 
 pub fn entry_for_taxid(
     tax_id: i64,
     cache: Option<&mut HashMap<i64, NcbiTaxEntry>>,
-) -> Result<NcbiTaxEntry, NcbiTaxEntryError> {
+) -> Result<NcbiTaxEntry, MibigError> {
     dotenv().ok();
 
     let dump_file_name = env::var("LINEAGE_DUMP")
@@ -71,15 +53,13 @@ pub fn entry_for_taxid(
         }
     }
 
-    Err(NcbiTaxEntryError {
-        message: format!("No entry found for taxid {}", tax_id).to_owned(),
-    })
+    Err(MibigError::InvalidTaxID(format!(
+        "Invalid taxid {}",
+        tax_id
+    )))
 }
 
-fn get_taxid_without_cache(
-    file_name: String,
-    tax_id: i64,
-) -> Result<NcbiTaxEntry, NcbiTaxEntryError> {
+fn get_taxid_without_cache(file_name: String, tax_id: i64) -> Result<NcbiTaxEntry, MibigError> {
     if let Ok(lines) = read_lines(file_name) {
         for line_option in lines {
             if let Ok(line) = line_option {
@@ -95,9 +75,10 @@ fn get_taxid_without_cache(
                 let curr_tax_id = match parts[0].parse::<i64>() {
                     Ok(i) => i,
                     Err(_) => {
-                        return Err(NcbiTaxEntryError {
-                            message: "couldn't parse taxid".to_owned(),
-                        })
+                        return Err(MibigError::InvalidTaxID(format!(
+                            "couldn't parse taxid {}",
+                            parts[0]
+                        )))
                     }
                 };
 
@@ -124,15 +105,16 @@ fn get_taxid_without_cache(
             }
         }
     };
-    Err(NcbiTaxEntryError {
-        message: format!("No entry found for taxid {}", tax_id).to_owned(),
-    })
+    Err(MibigError::InvalidTaxID(format!(
+        "No entry found for taxid {}",
+        tax_id
+    )))
 }
 
 fn populate_cache(
     file_name: String,
     cache: &mut HashMap<i64, NcbiTaxEntry>,
-) -> Result<(), NcbiTaxEntryError> {
+) -> Result<(), MibigError> {
     let mut counter = 0;
 
     if let Ok(lines) = read_lines(file_name) {
@@ -154,9 +136,10 @@ fn populate_cache(
                 let tax_id = match parts[0].parse::<i64>() {
                     Ok(i) => i,
                     Err(_) => {
-                        return Err(NcbiTaxEntryError {
-                            message: "couldn't parse taxid".to_owned(),
-                        })
+                        return Err(MibigError::InvalidTaxID(format!(
+                            "couldn't parse taxid {}",
+                            parts[0]
+                        )))
                     }
                 };
 
@@ -183,7 +166,7 @@ fn populate_cache(
     Ok(())
 }
 
-fn detect_merged_id(tax_id: i64) -> Result<i64, NcbiTaxEntryError> {
+fn detect_merged_id(tax_id: i64) -> Result<i64, MibigError> {
     dotenv().ok();
 
     let merged_file_name =
@@ -201,9 +184,10 @@ fn detect_merged_id(tax_id: i64) -> Result<i64, NcbiTaxEntryError> {
                 let old_id = match parts[0].parse::<i64>() {
                     Ok(i) => i,
                     Err(_) => {
-                        return Err(NcbiTaxEntryError {
-                            message: format!("couldn't parse old taxid {}", parts[0]).to_owned(),
-                        })
+                        return Err(MibigError::InvalidTaxID(format!(
+                            "couldn't parse old taxid {}",
+                            parts[0]
+                        )))
                     }
                 };
 
@@ -214,18 +198,20 @@ fn detect_merged_id(tax_id: i64) -> Result<i64, NcbiTaxEntryError> {
                 let new_id = match parts[1].parse::<i64>() {
                     Ok(i) => i,
                     Err(_) => {
-                        return Err(NcbiTaxEntryError {
-                            message: format!("couldn't parse new taxid {}", parts[1]).to_owned(),
-                        })
+                        return Err(MibigError::InvalidTaxID(format!(
+                            "couldn't parse new taxid {}",
+                            parts[1]
+                        )))
                     }
                 };
                 return Ok(new_id);
             }
         }
     };
-    Err(NcbiTaxEntryError {
-        message: format!("No entry found for taxid {}", tax_id).to_owned(),
-    })
+    Err(MibigError::InvalidTaxID(format!(
+        "No entry found for taxid {}",
+        tax_id
+    )))
 }
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
