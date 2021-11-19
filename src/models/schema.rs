@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::super::utils;
+use crate::utils;
 
 pub mod alkaloid;
 pub mod compound;
