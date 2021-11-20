@@ -1,15 +1,19 @@
-#[macro_use]
-extern crate rocket;
+extern crate bcrypt;
 #[macro_use]
 extern crate diesel;
 extern crate dotenv;
+#[macro_use]
+extern crate rocket;
+extern crate rpassword;
 extern crate structopt;
 
 pub use structopt::StructOpt;
 mod errors;
 mod models;
 mod repo;
+#[allow(unused_imports)]
 mod schema;
+mod user;
 mod utils;
 
 use dotenv::dotenv;
@@ -24,9 +28,6 @@ pub struct DBPool(diesel::PgConnection);
 #[derive(Debug, StructOpt)]
 #[structopt(name = "mibig-api", about = "Manage the MIBiG database")]
 pub struct Opts {
-    #[structopt(short, long, help = "Set verbose output")]
-    verbose: bool,
-
     #[structopt(subcommand)]
     cmd: Subcommand,
 }
@@ -34,15 +35,11 @@ pub struct Opts {
 #[derive(Debug, StructOpt)]
 enum Subcommand {
     #[structopt(name = "serve", about = "Runs the web API")]
-    Serve(ServeOpts),
+    Serve,
     #[structopt(name = "repo", about = "Manages the repository")]
     Repo(repo::RepoOpts),
-}
-
-#[derive(Debug, StructOpt)]
-pub struct ServeOpts {
-    #[structopt(short, long, help = "Start server in development mode")]
-    develop: bool,
+    #[structopt(name = "user", about = "Manage MIBiG users")]
+    User(user::UserOpts),
 }
 
 mod web;
@@ -67,9 +64,10 @@ async fn main() {
     let args = Opts::from_args();
 
     match args.cmd {
-        Subcommand::Serve(_) => {
+        Subcommand::Serve => {
             let _ = rocket().launch().await;
         }
         Subcommand::Repo(cfg) => repo::repo(cfg),
+        Subcommand::User(cfg) => user::user(cfg),
     };
 }
