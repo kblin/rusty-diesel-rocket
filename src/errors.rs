@@ -1,4 +1,5 @@
 use bcrypt;
+use diesel;
 use std::error;
 use std::fmt;
 use std::io;
@@ -10,6 +11,7 @@ pub enum MibigError {
     Io(io::Error),
     InvalidTaxID(String),
     Password(bcrypt::BcryptError),
+    DatabaseError(diesel::result::Error),
 }
 
 macro_rules! implement_custom_error_from {
@@ -24,6 +26,7 @@ macro_rules! implement_custom_error_from {
 
 implement_custom_error_from!(io::Error, MibigError::Io);
 implement_custom_error_from!(bcrypt::BcryptError, MibigError::Password);
+implement_custom_error_from!(diesel::result::Error, MibigError::DatabaseError);
 
 impl fmt::Display for MibigError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -32,6 +35,7 @@ impl fmt::Display for MibigError {
             MibigError::NotImplemented => write!(f, "Not implemented"),
             MibigError::InvalidTaxID(ref err) => write!(f, "Invalid TaxID: {}", err),
             MibigError::Password(ref err) => write!(f, "Password error: {}", err),
+            MibigError::DatabaseError(ref err) => write!(f, "Database error: {}", err),
         }
     }
 }
@@ -41,6 +45,7 @@ impl error::Error for MibigError {
         match *self {
             MibigError::Io(ref err) => Some(err),
             MibigError::Password(ref err) => Some(err),
+            MibigError::DatabaseError(ref err) => Some(err),
             MibigError::NotImplemented | MibigError::InvalidTaxID(_) => None,
         }
     }
