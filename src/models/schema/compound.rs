@@ -21,7 +21,7 @@ pub struct Compound {
     #[serde(rename = "database_id", skip_serializing_if = "Option::is_none")]
     pub database_ids: Option<Vec<DatabaseId>>,
     #[serde(rename = "evidence", skip_serializing_if = "Option::is_none")]
-    pub evidences: Option<Vec<String>>,
+    pub evidences: Option<Vec<CompoundEvidence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mass_spec_ion_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -118,4 +118,17 @@ impl<'de> Deserialize<'de> for DatabaseId {
 
         deserializer.deserialize_str(DatabaseIdVisitor)
     }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum CompoundEvidence {
+    #[serde(rename = "Chemical derivatization")]
+    ChemicalDerivitization,
+    #[serde(rename = "Total synthesis")]
+    TotalSynthesis,
+    #[serde(rename = "Mass spectrometry")]
+    MassSpectrometry,
+    #[serde(rename = "X-ray")]
+    XRay,
+    NMR,
 }
