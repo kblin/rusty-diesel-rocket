@@ -94,11 +94,24 @@ table! {
     }
 }
 
+table! {
+    use diesel::sql_types::*;
+    use crate::utils::typedefs::sql_types::*;
+
+    tokens (hash) {
+        hash -> Bytea,
+        user_id -> Text,
+        expiry -> Timestamptz,
+        scope -> Text,
+    }
+}
+
 joinable!(entries -> taxa (tax_id));
 joinable!(rel_entries_types -> bgc_types (bgc_type_id));
 joinable!(rel_entries_types -> entries (entry_id));
 joinable!(rel_submitters_roles -> roles (role_id));
 joinable!(rel_submitters_roles -> submitters (user_id));
+joinable!(tokens -> submitters (user_id));
 
 allow_tables_to_appear_in_same_query!(
     bgc_types,
@@ -108,4 +121,5 @@ allow_tables_to_appear_in_same_query!(
     roles,
     submitters,
     taxa,
+    tokens,
 );

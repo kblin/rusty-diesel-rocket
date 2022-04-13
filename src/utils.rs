@@ -9,6 +9,8 @@ use rand::Rng;
 
 use crate::errors::MibigError;
 
+const TOKEN_ID_LENGTH: usize = 16;
+
 pub fn generate_uid(length: usize) -> Result<String, MibigError> {
     let mut rng = rand::thread_rng();
     let mut token_bytes: Vec<u8> = vec![0; length];
@@ -18,6 +20,10 @@ pub fn generate_uid(length: usize) -> Result<String, MibigError> {
     let token = BASE32_NOPAD.encode(&token_bytes);
 
     Ok(token)
+}
+
+pub fn generate_token_id() -> Result<String, MibigError> {
+    generate_uid(TOKEN_ID_LENGTH)
 }
 
 pub fn generate_password(password: String) -> Result<String, MibigError> {
