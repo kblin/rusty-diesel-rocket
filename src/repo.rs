@@ -4,10 +4,12 @@ use serde_json;
 use structopt::clap::arg_enum;
 use structopt::StructOpt;
 
-use crate::errors::MibigError;
-use crate::utils;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+
+use crate::errors::MibigError;
+use crate::models::db::Entry;
+use crate::utils;
 
 #[derive(Debug, StructOpt)]
 pub struct RepoOpts {
@@ -56,10 +58,10 @@ pub fn repo(cfg: RepoOpts) {
 
     match cfg.cmd {
         Some(cmd) => match cmd {
-            RepoSubcommand::List(opts) => repo_list(opts.status),
+            RepoSubcommand::List(opts) => repo_list(opts.status, conn),
             RepoSubcommand::Import(opts) => repo_import(opts.input, conn, opts.json_only),
         },
-        None => repo_list(RepoListEntryStatus::Published),
+        None => repo_list(RepoListEntryStatus::Published, conn),
     }
 }
 
@@ -188,6 +190,14 @@ fn get_or_create_taxid<'a>(
     Ok(loaded_taxid)
 }
 
-fn repo_list(status: RepoListEntryStatus) {
-    println!("Listing stuff on level {:?}", status)
+fn repo_list(status: RepoListEntryStatus, conn: PgConnection) {
+    use crate::schema::entries::dsl::*;
+
+    let results = entries
+        .load::<Entry>(&conn)
+        .expect("Error loading entries.");
+    println!("Listing stuff on level {:?}", status);
+    for entry in results {
+        println!("{}: {:?}", entry.id, entry.biosyn_class);
+    }
 }
