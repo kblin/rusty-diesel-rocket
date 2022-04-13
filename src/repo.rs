@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::path::PathBuf;
 
 use serde_json;
 use structopt::clap::arg_enum;
@@ -6,6 +6,8 @@ use structopt::StructOpt;
 
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+
+use mibig_taxa::TaxonCache;
 
 use crate::errors::MibigError;
 use crate::models::db::Entry;
@@ -48,9 +50,16 @@ pub struct RepoImportOpts {
         parse(from_os_str),
         help = "File or directory containing MIBiG JSON data"
     )]
-    input: std::path::PathBuf,
+    input: PathBuf,
     #[structopt(short, long, help = "Only run json parsing")]
     json_only: bool,
+    #[structopt(
+        short,
+        long,
+        parse(from_os_str),
+        help = "File containing the taxon cache"
+    )]
+    tax_cache_path: Option<PathBuf>,
 }
 
 pub fn repo(cfg: RepoOpts) {
@@ -59,7 +68,9 @@ pub fn repo(cfg: RepoOpts) {
     match cfg.cmd {
         Some(cmd) => match cmd {
             RepoSubcommand::List(opts) => repo_list(opts.status, conn),
-            RepoSubcommand::Import(opts) => repo_import(opts.input, conn, opts.json_only),
+            RepoSubcommand::Import(opts) => {
+                repo_import(opts.input, opts.tax_cache_path, conn, opts.json_only)
+            }
         },
         None => repo_list(RepoListEntryStatus::Published, conn),
     }
@@ -67,13 +78,27 @@ pub fn repo(cfg: RepoOpts) {
 
 use crate::models;
 
-fn repo_import(input: std::path::PathBuf, conn: PgConnection, json_only: bool) {
-    if input.is_file() {
-        import_file(input, None, &conn, json_only);
-        return;
+fn repo_import(
+    input: PathBuf,
+    tax_cache_path_opt: Option<PathBuf>,
+    conn: PgConnection,
+    json_only: bool,
+) {
+    let tax_cache_path: PathBuf;
+    match tax_cache_path_opt {
+        Some(path) => tax_cache_path = path,
+        None => tax_cache_path = PathBuf::from("tax_cache.json"),
+    };
+
+    let mut taxon_cache = TaxonCache::new();
+    if let Ok(num_entries) = taxon_cache.load_path(&tax_cache_path) {
+        eprintln!("Loaded {num_entries} taxon entries");
     }
 
-    let mut taxon_cache: HashMap<i64, utils::taxa::NcbiTaxEntry> = HashMap::new();
+    if input.is_file() {
+        import_file(input, &taxon_cache, &conn, json_only);
+        return;
+    }
 
     let mut entries = std::fs::read_dir(input)
         .expect("failed to read input")
@@ -88,13 +113,13 @@ fn repo_import(input: std::path::PathBuf, conn: PgConnection, json_only: bool) {
             continue;
         }
         eprintln!("Loading {:?}", path);
-        import_file(path, Some(&mut taxon_cache), &conn, json_only);
+        import_file(path, &taxon_cache, &conn, json_only);
     }
 }
 
 fn import_file(
     infile: std::path::PathBuf,
-    cache: Option<&mut HashMap<i64, utils::taxa::NcbiTaxEntry>>,
+    cache: &TaxonCache,
     conn: &PgConnection,
     json_only: bool,
 ) {
@@ -109,11 +134,7 @@ fn import_file(
     println!("{}", return_value)
 }
 
-fn insert_into_db(
-    entry: &models::schema::Entry,
-    cache: Option<&mut HashMap<i64, utils::taxa::NcbiTaxEntry>>,
-    conn: &PgConnection,
-) {
+fn insert_into_db(entry: &models::schema::Entry, cache: &TaxonCache, conn: &PgConnection) {
     let tax_id = get_or_create_taxid(
         entry.cluster.organism_name.as_str(),
         entry.cluster.ncbi_tax_id,
@@ -153,7 +174,7 @@ fn insert_into_db(
 fn get_or_create_taxid<'a>(
     organism_name: &'a str,
     ncbi_tax_id: i64,
-    cache: Option<&'a mut HashMap<i64, utils::taxa::NcbiTaxEntry>>,
+    cache: &TaxonCache,
     conn: &'a PgConnection,
 ) -> Result<i64, MibigError> {
     use crate::schema::taxa::dsl::*;

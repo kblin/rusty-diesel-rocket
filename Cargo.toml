@@ -17,6 +17,7 @@ rand = "0.8.5"
 bcrypt = "0.10"
 rpassword = "5.0"
 exitcode = "1.1.2"
+mibig-taxa = "0.1"
 
 [dependencies.rocket_sync_db_pools]
 version = "0.1.0-rc.1"

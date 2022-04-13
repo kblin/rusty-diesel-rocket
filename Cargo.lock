@@ -627,10 +627,22 @@ dependencies = [
  "diesel",
  "dotenv",
  "exitcode",
+ "mibig-taxa",
  "rand",
  "rocket",
  "rocket_sync_db_pools",
  "rpassword",
+ "serde",
+ "serde_json",
+ "structopt",
+]
+
+[[package]]
+name = "mibig-taxa"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5dac11e162c400da25b2e64ef934333782ace7f17848eef026a5f94e823ff71d"
+dependencies = [
  "serde",
  "serde_json",
  "structopt",
