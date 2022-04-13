@@ -1,12 +1,13 @@
-use std::time::{Duration, SystemTime};
+use chrono::{DateTime, Duration, Utc};
 
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 
-use crate::schema::tokens;
-use crate::utils::generate_token_id;
 use crate::errors::MibigError;
+use crate::schema::tokens;
+use crate::schema::tokens::dsl::tokens as all_tokens;
+use crate::utils::generate_token_id;
 
 #[derive(Insertable, Identifiable, Queryable, PartialEq, Debug)]
 #[table_name = "tokens"]
@@ -14,22 +15,38 @@ use crate::errors::MibigError;
 pub struct Token {
     pub hash: Vec<u8>,
     pub user_id: String,
-    pub expiry: SystemTime,
+    pub expiry: DateTime<Utc>,
     pub scope: String,
 }
 
 impl Token {
     pub fn new(user_id: String, ttl: Duration, scope: String) -> Result<Token, MibigError> {
         let hash = generate_token_id()?;
-        Token {
-            hash: hash.to_bytes().to_vec(),
-            user_id: user_id.to)_owned(),
-            expiry: SystemTime::now().add(ttl),
+        let token = Token {
+            hash: hash.as_bytes().to_vec(),
+            user_id: user_id.to_owned(),
+            expiry: Utc::now() + ttl,
             scope: scope.to_owned(),
-        }
+        };
+        Ok(token)
     }
 
-    pub all(conn: &PgConnection) -> Result<Vec<Token>, MibigError> {
-        
+    pub fn all(conn: &PgConnection) -> Result<Vec<Token>, MibigError> {
+        let res = all_tokens
+            .order(tokens::user_id.desc())
+            .load::<Token>(conn)?;
+        Ok(res)
     }
+
+    pub fn all_by_scope(scope: String, conn: &PgConnection) -> Result<Vec<Token>, MibigError> {
+        let res = all_tokens
+            .filter(tokens::scope.eq(scope))
+            .order(tokens::user_id.desc())
+            .load::<Token>(conn)?;
+        Ok(res)
+    }
+
+    pub fn insert() {}
+
+    pub fn delete_all_for_user() {}
 }

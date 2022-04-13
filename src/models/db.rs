@@ -2,6 +2,7 @@ use crate::schema::*;
 
 pub mod submitters;
 pub mod taxa;
+pub mod tokens;
 
 pub use taxa::*;
 

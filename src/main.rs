@@ -14,6 +14,7 @@ mod models;
 mod repo;
 #[allow(unused_imports)]
 mod schema;
+mod token;
 mod user;
 mod utils;
 
@@ -41,6 +42,8 @@ enum Subcommand {
     Repo(repo::RepoOpts),
     #[structopt(name = "user", about = "Manage MIBiG users")]
     User(user::UserOpts),
+    #[structopt(name = "token", about = "Manage tokens")]
+    Token(token::TokenOpts),
 }
 
 mod web;
@@ -70,5 +73,6 @@ async fn main() {
         }
         Subcommand::Repo(cfg) => repo::repo(cfg),
         Subcommand::User(cfg) => user::user(cfg),
+        Subcommand::Token(cfg) => token::token(cfg),
     };
 }
