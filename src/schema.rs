@@ -61,6 +61,20 @@ table! {
     use diesel::sql_types::*;
     use crate::utils::typedefs::sql_types::*;
 
+    submission_requests (id) {
+        id -> Int8,
+        user_id -> Text,
+        compounds -> Array<Text>,
+        accession -> Text,
+        start_nt -> Nullable<Int4>,
+        end_nt -> Nullable<Int4>,
+    }
+}
+
+table! {
+    use diesel::sql_types::*;
+    use crate::utils::typedefs::sql_types::*;
+
     submitters (user_id) {
         user_id -> Text,
         email -> Citext,
@@ -111,6 +125,7 @@ joinable!(rel_entries_types -> bgc_types (bgc_type_id));
 joinable!(rel_entries_types -> entries (entry_id));
 joinable!(rel_submitters_roles -> roles (role_id));
 joinable!(rel_submitters_roles -> submitters (user_id));
+joinable!(submission_requests -> submitters (user_id));
 joinable!(tokens -> submitters (user_id));
 
 allow_tables_to_appear_in_same_query!(
@@ -119,6 +134,7 @@ allow_tables_to_appear_in_same_query!(
     rel_entries_types,
     rel_submitters_roles,
     roles,
+    submission_requests,
     submitters,
     taxa,
     tokens,

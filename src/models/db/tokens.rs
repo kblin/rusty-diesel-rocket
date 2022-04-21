@@ -31,6 +31,11 @@ impl Token {
         Ok(token)
     }
 
+    pub fn show(hash: &Vec<u8>, conn: &PgConnection) -> Result<Token, MibigError> {
+        let token = all_tokens.find(hash).first(conn)?;
+        Ok(token)
+    }
+
     pub fn all(conn: &PgConnection) -> Result<Vec<Token>, MibigError> {
         let res = all_tokens
             .order(tokens::user_id.desc())
@@ -46,7 +51,24 @@ impl Token {
         Ok(res)
     }
 
-    pub fn insert() {}
+    pub fn insert(token: Token, conn: &PgConnection) -> Result<(), MibigError> {
+        diesel::insert_into(tokens::table)
+            .values(&token)
+            .execute(conn)?;
+        Ok(())
+    }
 
-    pub fn delete_all_for_user() {}
+    pub fn delete_all_for_user(
+        scope: String,
+        user_id: String,
+        conn: &PgConnection,
+    ) -> Result<(), MibigError> {
+        diesel::delete(
+            all_tokens
+                .filter(tokens::scope.eq(&scope))
+                .filter(tokens::user_id.eq(&user_id)),
+        )
+        .execute(conn)?;
+        Ok(())
+    }
 }
