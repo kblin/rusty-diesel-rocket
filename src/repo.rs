@@ -124,7 +124,7 @@ fn import_file(
     json_only: bool,
 ) {
     let content = std::fs::read_to_string(&infile).expect("could not read file");
-    let entry: models::schema::Entry = serde_json::from_str(&content).unwrap();
+    let entry: models::legacy_schema::Entry = serde_json::from_str(&content).unwrap();
 
     if !json_only {
         insert_into_db(&entry, cache, conn);
@@ -134,7 +134,7 @@ fn import_file(
     println!("{}", return_value)
 }
 
-fn insert_into_db(entry: &models::schema::Entry, cache: &TaxonCache, conn: &PgConnection) {
+fn insert_into_db(entry: &models::legacy_schema::Entry, cache: &TaxonCache, conn: &PgConnection) {
     let tax_id = get_or_create_taxid(
         entry.cluster.organism_name.as_str(),
         entry.cluster.ncbi_tax_id,
