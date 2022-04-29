@@ -31,7 +31,7 @@ structopt::clap::arg_enum! {
     #[derive(Debug)]
     enum TokenListScope {
         All,
-        Actication,
+        Activation,
     }
 }
 
