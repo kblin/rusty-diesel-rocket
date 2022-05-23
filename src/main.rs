@@ -12,6 +12,7 @@ pub use structopt::StructOpt;
 mod errors;
 mod models;
 mod repo;
+mod req;
 #[allow(unused_imports)]
 mod schema;
 mod token;
@@ -42,6 +43,8 @@ enum Subcommand {
     Repo(repo::RepoOpts),
     #[structopt(name = "user", about = "Manage MIBiG users")]
     User(user::UserOpts),
+    #[structopt(name = "req", about = "Manage requets")]
+    Req(req::ReqOpts),
     #[structopt(name = "token", about = "Manage tokens")]
     Token(token::TokenOpts),
 }
@@ -73,6 +76,7 @@ async fn main() {
         }
         Subcommand::Repo(cfg) => repo::repo(cfg),
         Subcommand::User(cfg) => user::user(cfg),
+        Subcommand::Req(cfg) => req::req(cfg),
         Subcommand::Token(cfg) => token::token(cfg),
     };
 }

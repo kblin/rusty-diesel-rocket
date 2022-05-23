@@ -1,6 +1,6 @@
 use crate::schema::*;
 
-pub mod submissions;
+pub mod submission_requests;
 pub mod submitters;
 pub mod taxa;
 pub mod tokens;

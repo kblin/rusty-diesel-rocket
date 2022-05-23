@@ -55,4 +55,15 @@ impl SubmissionRequest {
             .load::<SubmissionRequest>(conn)?;
         Ok(res)
     }
+
+    pub fn show(id: i64, conn: &PgConnection) -> Result<SubmissionRequest, MibigError> {
+        let req = all_submission_requests.find(id).first(conn)?;
+        Ok(req)
+    }
+
+    pub fn delete(id: i64, conn: &PgConnection) -> Result<(), MibigError> {
+        SubmissionRequest::show(id, conn)?;
+        diesel::delete(all_submission_requests.find(id)).execute(conn)?;
+        Ok(())
+    }
 }
