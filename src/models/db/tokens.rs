@@ -51,9 +51,9 @@ impl Token {
         Ok(res)
     }
 
-    pub fn insert(token: Token, conn: &PgConnection) -> Result<(), MibigError> {
+    pub fn insert(token: &Token, conn: &PgConnection) -> Result<(), MibigError> {
         diesel::insert_into(tokens::table)
-            .values(&token)
+            .values(token)
             .execute(conn)?;
         Ok(())
     }
