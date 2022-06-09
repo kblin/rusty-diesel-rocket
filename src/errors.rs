@@ -1,17 +1,21 @@
 use bcrypt;
 use diesel;
+use rocket::http::{ContentType, Status};
+use rocket::response::{Responder, Response, Result};
+use rocket::Request;
 use std::error;
 use std::fmt;
 use std::io;
+use std::io::Cursor;
 
 #[derive(Debug)]
 pub enum MibigError {
-    #[allow(dead_code)]
     NotImplemented,
     Io(io::Error),
     InvalidTaxID(String),
     Password(bcrypt::BcryptError),
     DatabaseError(diesel::result::Error),
+    Unauthorised,
 }
 
 macro_rules! implement_custom_error_from {
@@ -36,6 +40,7 @@ impl fmt::Display for MibigError {
             MibigError::InvalidTaxID(ref err) => write!(f, "Invalid TaxID: {}", err),
             MibigError::Password(ref err) => write!(f, "Password error: {}", err),
             MibigError::DatabaseError(ref err) => write!(f, "Database error: {}", err),
+            MibigError::Unauthorised => write!(f, "Unauthorised"),
         }
     }
 }
@@ -46,7 +51,40 @@ impl error::Error for MibigError {
             MibigError::Io(ref err) => Some(err),
             MibigError::Password(ref err) => Some(err),
             MibigError::DatabaseError(ref err) => Some(err),
-            MibigError::NotImplemented | MibigError::InvalidTaxID(_) => None,
+            MibigError::NotImplemented | MibigError::InvalidTaxID(_) | MibigError::Unauthorised => {
+                None
+            }
+        }
+    }
+}
+
+impl<'r> Responder<'r, 'static> for MibigError {
+    fn respond_to(self, _: &'r Request<'_>) -> Result<'static> {
+        match self {
+            MibigError::NotImplemented => {
+                let body = format!("Server error: {}", self);
+
+                let res = Response::build()
+                    .status(Status::InternalServerError)
+                    .header(ContentType::Plain)
+                    .sized_body(body.len(), Cursor::new(body))
+                    .finalize();
+                return Ok(res);
+            }
+            MibigError::Io(_) => todo!(),
+            MibigError::InvalidTaxID(_) => todo!(),
+            MibigError::Password(_) => todo!(),
+            MibigError::DatabaseError(_) => todo!(),
+            MibigError::Unauthorised => {
+                let body = format!("{}", self);
+
+                let res = Response::build()
+                    .status(Status::Unauthorized)
+                    .header(ContentType::Plain)
+                    .sized_body(body.len(), Cursor::new(body))
+                    .finalize();
+                return Ok(res);
+            }
         }
     }
 }
