@@ -3,7 +3,7 @@ pub mod num_as_string;
 pub mod taxa;
 pub mod typedefs;
 
-use bcrypt::{hash, DEFAULT_COST};
+use bcrypt::{hash, DEFAULT_COST, verify};
 use data_encoding::BASE32_NOPAD;
 use rand::Rng;
 
@@ -29,4 +29,9 @@ pub fn generate_token_id() -> Result<String, MibigError> {
 pub fn generate_password(password: String) -> Result<String, MibigError> {
     let hashed = hash(password, DEFAULT_COST)?;
     Ok(hashed)
+}
+
+pub fn check_password(password: String, hash: String) -> Result<bool, MibigError> {
+    let res = verify(password, hash.as_str())?;
+    Ok(res)
 }
