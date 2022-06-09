@@ -113,7 +113,7 @@ table! {
     use crate::utils::typedefs::sql_types::*;
 
     tokens (hash) {
-        hash -> Bytea,
+        hash -> Text,
         user_id -> Text,
         expiry -> Timestamptz,
         scope -> Text,

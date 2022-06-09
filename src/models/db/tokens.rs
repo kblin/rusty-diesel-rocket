@@ -13,7 +13,7 @@ use crate::utils::generate_token_id;
 #[table_name = "tokens"]
 #[primary_key(hash)]
 pub struct Token {
-    pub hash: Vec<u8>,
+    pub hash: String,
     pub user_id: String,
     pub expiry: DateTime<Utc>,
     pub scope: String,
@@ -23,7 +23,7 @@ impl Token {
     pub fn new(user_id: String, ttl: Duration, scope: String) -> Result<Token, MibigError> {
         let hash = generate_token_id()?;
         let token = Token {
-            hash: hash.as_bytes().to_vec(),
+            hash: hash.to_owned(),
             user_id: user_id.to_owned(),
             expiry: Utc::now() + ttl,
             scope: scope.to_owned(),
@@ -31,7 +31,7 @@ impl Token {
         Ok(token)
     }
 
-    pub fn show(hash: &Vec<u8>, conn: &PgConnection) -> Result<Token, MibigError> {
+    pub fn show(hash: String, conn: &PgConnection) -> Result<Token, MibigError> {
         let token = all_tokens.find(hash).first(conn)?;
         Ok(token)
     }

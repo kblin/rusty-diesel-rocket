@@ -32,6 +32,7 @@ structopt::clap::arg_enum! {
     enum TokenListScope {
         All,
         Activation,
+        Authentication,
     }
 }
 
@@ -58,7 +59,7 @@ fn token_list(scope: TokenListScope, conn: PgConnection) {
         Ok(results) => {
             for token in results {
                 println!(
-                    "{hash:?}\t{user_id}\t{expiry:?}\t{scope}",
+                    "{hash}\t{user_id}\t{expiry:?}\t{scope}",
                     hash = token.hash,
                     user_id = token.user_id,
                     expiry = token.expiry,
