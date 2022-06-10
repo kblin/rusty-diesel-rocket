@@ -61,7 +61,10 @@ impl error::Error for MibigError {
 impl<'r> Responder<'r, 'static> for MibigError {
     fn respond_to(self, _: &'r Request<'_>) -> Result<'static> {
         match self {
-            MibigError::NotImplemented => {
+            MibigError::DatabaseError(_)
+            | MibigError::InvalidTaxID(_)
+            | MibigError::Io(_)
+            | MibigError::NotImplemented => {
                 let body = format!("Server error: {}", self);
 
                 let res = Response::build()
@@ -71,11 +74,7 @@ impl<'r> Responder<'r, 'static> for MibigError {
                     .finalize();
                 return Ok(res);
             }
-            MibigError::Io(_) => todo!(),
-            MibigError::InvalidTaxID(_) => todo!(),
-            MibigError::Password(_) => todo!(),
-            MibigError::DatabaseError(_) => todo!(),
-            MibigError::Unauthorised => {
+            MibigError::Password(_) | MibigError::Unauthorised => {
                 let body = format!("{}", self);
 
                 let res = Response::build()
