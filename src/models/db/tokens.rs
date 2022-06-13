@@ -4,10 +4,16 @@ use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 
+use rocket::http::Status;
+use rocket::http::{Cookie, CookieJar};
+use rocket::outcome::try_outcome;
+use rocket::request::{self, FromRequest, Outcome, Request};
+
 use crate::errors::MibigError;
 use crate::schema::tokens;
 use crate::schema::tokens::dsl::tokens as all_tokens;
 use crate::utils::generate_token_id;
+use crate::DBPool;
 
 #[derive(Insertable, Identifiable, Queryable, PartialEq, Debug)]
 #[table_name = "tokens"]
@@ -70,5 +76,33 @@ impl Token {
         )
         .execute(conn)?;
         Ok(())
+    }
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for Token {
+    type Error = ();
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, ()> {
+        let token_id: String;
+        let pool = try_outcome!(req.guard::<DBPool>().await);
+
+        if let Some(cookie) = req.cookies().get_private("token") {
+            token_id = cookie.value().to_string();
+        } else {
+            match req.headers().get_one("authorization") {
+                None => token_id = "".to_string(),
+                Some(key) => {
+                    let mut splitter = key.splitn(2, " ");
+                    splitter.next().unwrap_or("");
+                    token_id = splitter.next().unwrap_or("").to_string();
+                }
+            }
+        }
+        if let Ok(token) = pool.run(|c| Token::show(token_id, c)).await {
+            Outcome::Success(token)
+        } else {
+            Outcome::Failure((Status::BadRequest, ()))
+        }
     }
 }
