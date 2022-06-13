@@ -5,9 +5,9 @@ pub fn get_routes() -> std::vec::Vec<rocket::Route> {
         handlers::version,
         handlers::stats,
         handlers::repository,
-        handlers::login,
-        handlers::logout,
-        handlers::register,
-        handlers::activate,
+        handlers::user::login,
+        handlers::user::logout,
+        handlers::user::register,
+        handlers::user::activate,
     ]
 }
