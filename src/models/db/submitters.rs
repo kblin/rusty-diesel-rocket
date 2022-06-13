@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use crate::errors::MibigError;
 use crate::schema::submitters;
 use crate::schema::submitters::dsl::submitters as all_submitters;
+use crate::utils::check_password;
 use crate::utils::typedefs::types::*;
 
 #[derive(Insertable, Identifiable, Queryable, PartialEq, Debug)]
@@ -84,5 +85,12 @@ impl Submitter {
         Submitter::show(id, conn)?;
         diesel::delete(all_submitters.find(id)).execute(conn)?;
         Ok(())
+    }
+
+    pub fn check_password(&self, password: String) -> Result<bool, MibigError> {
+        match &self.password_hash {
+            None => Ok(false),
+            Some(hash) => check_password(password, hash.clone().to_string()),
+        }
     }
 }
