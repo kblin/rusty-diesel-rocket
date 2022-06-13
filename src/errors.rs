@@ -16,6 +16,7 @@ pub enum MibigError {
     Password(bcrypt::BcryptError),
     DatabaseError(diesel::result::Error),
     Unauthorised,
+    MissingToken,
 }
 
 macro_rules! implement_custom_error_from {
@@ -41,6 +42,7 @@ impl fmt::Display for MibigError {
             MibigError::Password(ref err) => write!(f, "Password error: {}", err),
             MibigError::DatabaseError(ref err) => write!(f, "Database error: {}", err),
             MibigError::Unauthorised => write!(f, "Unauthorised"),
+            MibigError::MissingToken => write!(f, "No authentication token"),
         }
     }
 }
@@ -51,9 +53,10 @@ impl error::Error for MibigError {
             MibigError::Io(ref err) => Some(err),
             MibigError::Password(ref err) => Some(err),
             MibigError::DatabaseError(ref err) => Some(err),
-            MibigError::NotImplemented | MibigError::InvalidTaxID(_) | MibigError::Unauthorised => {
-                None
-            }
+            MibigError::NotImplemented
+            | MibigError::InvalidTaxID(_)
+            | MibigError::Unauthorised
+            | MibigError::MissingToken => None,
         }
     }
 }
@@ -79,6 +82,16 @@ impl<'r> Responder<'r, 'static> for MibigError {
 
                 let res = Response::build()
                     .status(Status::Unauthorized)
+                    .header(ContentType::Plain)
+                    .sized_body(body.len(), Cursor::new(body))
+                    .finalize();
+                return Ok(res);
+            }
+            MibigError::MissingToken => {
+                let body = format!("{}", self);
+
+                let res = Response::build()
+                    .status(Status::BadRequest)
                     .header(ContentType::Plain)
                     .sized_body(body.len(), Cursor::new(body))
                     .finalize();
